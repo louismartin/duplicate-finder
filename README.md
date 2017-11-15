@@ -1,5 +1,5 @@
 # duplicate-finder
-Small python tool to find exact duplicates both at the file level and at the folder level.
+Simple python tool to find exact file and folder duplicates on your computer and drives.
 
 Simply run:
 ```bash
