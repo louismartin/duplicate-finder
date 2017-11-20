@@ -77,7 +77,7 @@ class HashNode(Node):
                                      self.hash_file_name,
                                      self.hash_file_size)
         hash_function = hashlib.md5()
-        for child in self.children:
+        for child in sorted(self.children, key=lambda c: c.hash_md5):
             hash_function.update(child.hash_md5)
         return hash_function.digest()
 
