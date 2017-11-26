@@ -13,54 +13,63 @@ def create_tree(root_path):
     # We need to save the nodes otherwise they will be lost outside the
     # method's scope.
     # TODO: Find another way to keep the nodes in memory
-    nodes = {root_path: root_node}
+    nodes_by_path = {root_path: root_node}
     for (dirpath, dirnames, filenames) in tqdm(os.walk(root_path)):
-        parent_node = nodes[dirpath]
+        parent_node = nodes_by_path[dirpath]
         items = [(name, False) for name in dirnames] + \
                 [(name, True) for name in filenames]
         for name, is_file in items:
             node = HashNode(name, parent=parent_node, is_file=is_file)
             path = os.path.join(dirpath, name)
-            nodes[path] = node
-    return root_node, nodes
+            nodes_by_path[path] = node
+    return nodes_by_path
+
+
+def group_nodes_by_hash(root_nodes, nodes_by_path,
+                        skip_duplicates_children=False):
+    print('Computing hashes and regrouping nodes...')
+    start = time.time()
+    nodes_by_hash = defaultdict(list)
+
+    # Traverse the tree
+    nodes_to_explore = root_nodes
+    while len(nodes_to_explore) > 0:
+        node = nodes_to_explore.pop()
+        if not (skip_duplicates_children and node.hash_md5 in nodes_by_hash):
+            # We only explore the children for that have no duplicates.
+            # The children of duplicate nodes will indeed be nested duplicates
+            nodes_to_explore.extend(node.children)
+        nodes_by_hash[node.hash_md5].append(node)
+    print('\t{:.2f}s'.format(time.time() - start))
+    return nodes_by_hash
 
 
 def find_duplicates(paths):
     root_nodes = []
-    all_nodes = []
+    nodes_by_path = {}
     print('Discovering files...')
     for path in paths:
         # Create tree
         print('\t{}'.format(path))
-        root_node, nodes = create_tree(path)
-        root_nodes.append(root_node)
-        all_nodes.extend(nodes)
+        assert os.path.exists(path), '{} does not exist'.format(path)
+        current_nodes_by_path = create_tree(path)
+        root_nodes.append(current_nodes_by_path[path])
+        nodes_by_path.update(current_nodes_by_path)
 
     # Regroup nodes by hash
-    print('Computing hashes and regrouping nodes...')
+    print(root_nodes)
+    nodes_by_hash = group_nodes_by_hash(root_nodes,
+                                        nodes_by_path,
+                                        skip_duplicates_children=True)
+    duplicate_hashes = [k for k, v in nodes_by_hash.items() if len(v) > 1]
+    # Compute duplicate sizes for each duplicate
+    print('Getting duplicates sizes...')
     start = time.time()
-    nodes_by_hash = defaultdict(list)
-    duplicate_hashes = set()
-    nodes_to_explore = root_nodes[:]
-    while len(nodes_to_explore) > 0:
-        node = nodes_to_explore.pop()
-        nodes_by_hash[node.hash_md5].append(node)
-        if len(nodes_by_hash[node.hash_md5]) > 1:
-            duplicate_hashes.add(node.hash_md5)
-            # Don't explore the children for duplicate nodes (all children will
-            # be nested smaller duplicates)
-            continue
-        nodes_to_explore.extend(node.children)
-    print('\t{:.2f}s'.format(time.time() - start))
-
-    # Compute total sizes of duplicates
-    print('Getting duplicate sizes...')
-    start = time.time()
-    duplicate_hashes = list(duplicate_hashes)
     sizes = []
     for hash_val in duplicate_hashes:
-        nodes = nodes_by_hash[hash_val]
-        duplicated_size = (len(nodes) - 1) * nodes[0].storage_size
+        duplicate_nodes = nodes_by_hash[hash_val]
+        nb_duplicates = len(duplicate_nodes) - 1
+        duplicated_size = nb_duplicates * duplicate_nodes[0].storage_size
         sizes.append(duplicated_size)
     print('\t{:.2f}s'.format(time.time() - start))
 
