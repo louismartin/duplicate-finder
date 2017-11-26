@@ -67,7 +67,7 @@ def find_duplicates(paths):
     # Sort and print duplicated nodes by size
     print('Sorting duplicates...')
     start = time.time()
-    for idx in np.argsort(sizes)[::-1][:10]:
+    for idx in np.argsort(sizes)[::-1]:
         size = sizes[idx]
         nodes = nodes_by_hash[duplicate_hashes[idx]]
         print('{:0.2f} MB'.format(size/1e6))

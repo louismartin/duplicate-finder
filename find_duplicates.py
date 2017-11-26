@@ -1,6 +1,6 @@
 import argparse
 
-from duplicate_finder.duplicate_finder import find_duplicates
+from duplicate_finder.utils import find_duplicates
 
 
 if __name__ == '__main__':
