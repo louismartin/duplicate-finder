@@ -6,15 +6,7 @@ import numpy as np
 from duplicate_finder.utils import explore_paths, group_nodes_by_hash, size_to_str
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('paths', nargs='+',
-                        help=('Paths from which to start the search for'
-                              'duplicates'))
-
-    args = parser.parse_args()
-    root_paths = args.paths
-
+def find_duplicates(root_paths):
     nodes_by_path = explore_paths(root_paths)
 
     # Regroup nodes by hash
@@ -39,4 +31,16 @@ if __name__ == '__main__':
     for idx in np.argsort(duplicated_sizes)[::-1][:100]:
         nodes = nodes_by_hash[duplicate_hashes[idx]]
         print(size_to_str(duplicated_sizes[idx]))
-        print(''.join(['\t{}\n'.format(node.storage_path) for node in nodes]))
+        paths = [node.storage_path for node in nodes]
+        print(''.join(['\t{}\n'.format(path) for path in paths]))
+        yield paths
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('paths', nargs='+',
+                        help=('Paths from which to start the search for'
+                              'duplicates'))
+
+    args = parser.parse_args()
+    find_duplicates(args.paths)
