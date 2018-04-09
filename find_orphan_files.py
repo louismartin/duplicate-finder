@@ -19,17 +19,7 @@ def is_orphan(node, hashes_new):
            all([is_orphan(child, hashes_new) for child in node.children])
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--paths-old', nargs='+',
-                        help=('Paths to look for orphans'))
-    parser.add_argument('--paths-new', nargs='+',
-                        help=('Paths to look for backups'))
-
-    args = parser.parse_args()
-    paths_old = args.paths_old
-    paths_new = args.paths_new
-
+def find_orphan_files(paths_old, paths_new):
     for path in paths_old:
         assert path not in paths_new
 
@@ -58,4 +48,15 @@ if __name__ == '__main__':
 
     for node in sorted(orphan_nodes, key=lambda node: node.storage_path)[::-1]:
         print('{}\n\t{}'.format(size_to_str(node.storage_size), node.storage_path))
+        yield node.storage_path
 
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--paths-old', required=True, nargs='+',
+                        help=('Paths to look for orphans'))
+    parser.add_argument('--paths-new', required=True, nargs='+',
+                        help=('Paths to look for backups'))
+
+    args = parser.parse_args()
+    list(find_orphan_files(args.paths_old, args.paths_new))
