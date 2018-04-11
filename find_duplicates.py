@@ -38,7 +38,7 @@ def find_duplicates(root_paths):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('paths', required=True, nargs='+',
+    parser.add_argument('paths', nargs='+',
                         help=('Paths from which to start the search for'
                               'duplicates'))
 

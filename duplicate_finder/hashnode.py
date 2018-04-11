@@ -66,7 +66,7 @@ class HashNode(Node):
 
     @lazyproperty
     def storage_path(self):
-        node_names = [str(node.name) for node in self.path]
+        node_names = [str(node.name).strip('/') for node in self.path]
         return self.separator.join([''] + node_names)
 
     @lazyproperty
@@ -99,8 +99,13 @@ class HashNode(Node):
             elif self.is_link:
                  return get_base_name_md5(self.storage_path)
             else:
-                 # Empty directory we only hash its name
-                 assert len(os.listdir(self.storage_path)) == 0, \
+                 # Empty directory, we only hash its name
+                 try:
+                     contents = os.listdir(self.storage_path)
+                 except FileNotFoundError as e:
+                     print(e)
+                     return get_base_name_md5(self.storage_path)
+                 assert len(contents) == 0, \
                         'Non empty directory is a leaf: {}'.format(self.storage_path)
                  return get_base_name_md5(self.storage_path)
         hash_function = hashlib.md5()
