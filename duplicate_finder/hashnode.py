@@ -63,6 +63,7 @@ def compute_file_hash(file_path,
 class HashNode(Node):
     hash_file_content = False
     hash_file_name = True
+    hash_file_size = True
 
     @lazyproperty
     def storage_path(self):
@@ -74,7 +75,6 @@ class HashNode(Node):
         if self.is_file:
             return get_file_size(self.storage_path)
         return sum([child.storage_size for child in self.children])
-    hash_file_size = True
 
     @lazyproperty
     def is_file(self):
@@ -102,7 +102,7 @@ class HashNode(Node):
                  # Empty directory, we only hash its name
                  try:
                      contents = os.listdir(self.storage_path)
-                 except FileNotFoundError as e:
+                 except (FileNotFoundError, PermissionError) as e:
                      print(e)
                      return get_base_name_md5(self.storage_path)
                  assert len(contents) == 0, \
