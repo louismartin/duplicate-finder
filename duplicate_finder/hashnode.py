@@ -65,10 +65,13 @@ class HashNode(Node):
     hash_file_name = True
     hash_file_size = True
 
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(name.rstrip('/'), *args, **kwargs)
+
     @lazyproperty
     def storage_path(self):
-        node_names = [str(node.name).strip('/') for node in self.path]
-        return self.separator.join([''] + node_names)
+        node_names = [str(node.name) for node in self.path]
+        return self.separator.join(node_names)
 
     @lazyproperty
     def storage_size(self):
