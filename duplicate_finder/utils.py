@@ -10,7 +10,7 @@ from .hashnode import HashNode
 
 
 def create_tree(root_path):
-    root_node = HashNode(root_path[1:], is_file=False)
+    root_node = HashNode(root_path, is_file=False)
     # We need to save the nodes otherwise they will be lost outside the
     # method's scope.
     # TODO: Find another way to keep the nodes in memory
